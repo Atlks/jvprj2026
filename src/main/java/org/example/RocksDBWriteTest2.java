@@ -1,15 +1,13 @@
 package org.example;
 
 
-
-import org.rocksdb.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.rocksdb.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
-public class RocksDBWriteTest {
+public class RocksDBWriteTest2 {
 
     static {
         RocksDB.loadLibrary();
@@ -17,7 +15,7 @@ public class RocksDBWriteTest {
 
     public static void main(String[] args) throws Exception {
 
-Thread.sleep(5000);
+        Thread.sleep(3000);
         /**
          * 👉 RocksDB 默认是 低风险 + 低内存 + 低并发
          * 👉 性能潜力只用到了 30% 左右
