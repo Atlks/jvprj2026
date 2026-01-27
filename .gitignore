@@ -37,3 +37,15 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/node_modules/
+/rocksdb-data/
+/rocksdb-data1769435453177/
+/rocksdb-data1769435458840/
+/rocksdb-data1769435478986/
+/rocksdb-data1769435481570/
+/rocksdb-data1769435542661/
+/rocksdb-data1769435544382/
+/rocksdb-data1769435547170/
+/rocksdb-data1769435648491/
+/rocksdb-data1769435648538/
+/rocksdb-data1769435648558/

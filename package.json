@@ -1,0 +1,30 @@
+{
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "name": "jvprj2026",
+  "version": "1.0.0",
+  "description": "",
+  "main": "nginx.js",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "undici-types": "^7.16.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Atlks/jvprj2026.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Atlks/jvprj2026/issues"
+  },
+  "homepage": "https://github.com/Atlks/jvprj2026#readme"
+}
