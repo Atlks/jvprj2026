@@ -15,8 +15,8 @@ public class SqliteWriteTest {
     public static void main(String[] args) throws Exception {
 
         // SQLite JDBC 连接
-      //  Connection conn = DriverManager.getConnection("jdbc:sqlite:orders3.db");
-        Connection conn = DriverManager.getConnection("jdbc:sqlite::memory:");
+         Connection conn = DriverManager.getConnection("jdbc:sqlite:orders6.db");
+      //  Connection conn = DriverManager.getConnection("jdbc:sqlite::memory:");
 
         Statement stmt = conn.createStatement();
 
@@ -45,7 +45,7 @@ public class SqliteWriteTest {
 
 
 
-        int N = 5_0000; // 写入数量
+        int N = 15_0000; // 写入数量
         long start = System.nanoTime();
 
 
@@ -86,7 +86,7 @@ public class SqliteWriteTest {
         System.out.printf("平均 TPS: %.2f 条/秒%n", tps);
 
        // Statement stmt = conn.createStatement();
-         flush2dsk(conn,stmt, sqlCrtTab );
+      //   flush2dsk(conn,stmt, sqlCrtTab );
         conn.commit();
 
         conn.close();
@@ -146,17 +146,19 @@ public class SqliteWriteTest {
 stmt.execute("PRAGMA cache_size = -512000;");
 
         stmt.execute(" PRAGMA wal_checkpoint(FULL); ");
-        stmt.execute(" PRAGMA temp_store = MEMORY;");
 
-        //   stmt.execute(" PRAGMA locking_mode = EXCLUSIVE;");
+        stmt.execute(" PRAGMA wal_autocheckpoint=99999;");
 
+
+          stmt.execute("   PRAGMA mmap_size = 268435456;");
+//（256MB）或更高
 
         stmt.close();
 
     }
 
     /**
-     *
+     *    //   stmt.execute(" PRAGMA temp_store = MEMORY;");
      * 缓存作用有限
      *
      * cache_size 和 temp_store=MEMORY 主要优化查询和临时表。
