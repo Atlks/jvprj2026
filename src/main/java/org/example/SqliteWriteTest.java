@@ -6,22 +6,29 @@ import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+
+/**
+ * memory表插入可以达到20w了。。。文件表5w tps
+ */
 public class SqliteWriteTest {
 
     public static void main(String[] args) throws Exception {
 
         // SQLite JDBC 连接
-        Connection conn = DriverManager.getConnection("jdbc:sqlite:orders3.db");
+      //  Connection conn = DriverManager.getConnection("jdbc:sqlite:orders3.db");
+        Connection conn = DriverManager.getConnection("jdbc:sqlite::memory:");
+
         Statement stmt = conn.createStatement();
 
         // 创建表
-        stmt.execute("""
-            CREATE TABLE IF NOT EXISTS ords (
-                id INTEGER PRIMARY KEY,
-                k TExt  NOT NULL,
-                v TEXT NOT NULL
-            )
-        """);
+        String sqlCrtTab = """
+                    CREATE TABLE IF NOT EXISTS ords (
+                        id INTEGER PRIMARY KEY,
+                        k TExt  NOT NULL,
+                        v TEXT NOT NULL
+                    )
+                """;
+        stmt.execute(sqlCrtTab);
 
         openModeFastInsert(conn);
 
@@ -38,7 +45,7 @@ public class SqliteWriteTest {
 
 
 
-        int N = 50_0000; // 写入数量
+        int N = 5_0000; // 写入数量
         long start = System.nanoTime();
 
 
@@ -63,7 +70,8 @@ public class SqliteWriteTest {
 
 
             conn.commit();
-
+             if(i==1)
+                 System.out.println("写入订单 " + i + ": " + k);
             if (i % 1000 == 0) {
                 System.out.println("写入订单 " + i + ": " + k);
             }
@@ -77,8 +85,43 @@ public class SqliteWriteTest {
         System.out.printf("写入 %d 条订单，总耗时: %.4f 秒%n", N, elapsedSec);
         System.out.printf("平均 TPS: %.2f 条/秒%n", tps);
 
+       // Statement stmt = conn.createStatement();
+         flush2dsk(conn,stmt, sqlCrtTab );
+        conn.commit();
+
         conn.close();
         System.out.println("完成写入");
+
+
+    }
+
+    private static void flush2dsk(Connection conn, Statement stmt1, String sqlCrtTab2 ) throws SQLException {
+
+        Statement stmt = conn.createStatement();
+        System.out.println("fun flsdsk()");
+        String sql="ATTACH DATABASE 'ordersFnl.db' AS diskdb;";
+        // 3. 挂载磁盘数据库
+        stmt.execute(sql);
+
+        // 4. 在磁盘数据库中建表（如果不存在）
+        stmt.execute("DROP TABLE IF EXISTS diskdb.ords;");
+        conn.commit();
+
+        String sqlCrtTab = """
+                    CREATE TABLE IF NOT EXISTS diskdb.ords (
+                        id INTEGER  KEY,
+                        k TExt  NOT NULL,
+                        v TEXT NOT NULL
+                    )
+                """;
+        System.out.println(sqlCrtTab);
+        stmt.execute(sqlCrtTab);
+        conn.commit();
+
+        // 5. 定期刷盘：把内存数据写入磁盘数据库
+        String sql1="INSERT INTO diskdb.ords SELECT * FROM ords;";
+        stmt.execute(sql1);
+        conn.commit();
     }
 
 
@@ -90,16 +133,34 @@ public class SqliteWriteTest {
      * 生产环境也可以用。
      *
      *  7000tps
+     *
+     *  synchronous=off  52tps
+     *
      */
     //// ⭐ 启用 WAL + 关闭同步（性能提升关键）
     private static void openModeFastInsert(Connection conn) throws SQLException {
         Statement stmt = conn.createStatement();
         stmt.execute("PRAGMA journal_mode = WAL;");
         stmt.execute("PRAGMA synchronous = OFF;");
-     //   stmt.execute(" PRAGMA locking_mode = EXCLUSIVE;");
+// 设置缓存为 500MB
+stmt.execute("PRAGMA cache_size = -512000;");
+
+        stmt.execute(" PRAGMA wal_checkpoint(FULL); ");
+        stmt.execute(" PRAGMA temp_store = MEMORY;");
+
+        //   stmt.execute(" PRAGMA locking_mode = EXCLUSIVE;");
 
 
         stmt.close();
 
     }
+
+    /**
+     *
+     * 缓存作用有限
+     *
+     * cache_size 和 temp_store=MEMORY 主要优化查询和临时表。
+     *
+     * 写入性能的瓶颈在 WAL 日志和磁盘刷盘，不在 page cache。
+     */
 }
