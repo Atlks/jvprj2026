@@ -1,7 +1,6 @@
 package org.example;
 
 
-
 import org.rocksdb.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,28 +16,41 @@ public class RocksDBWriteTest {
 
     public static void main(String[] args) throws Exception {
 
-Thread.sleep(5000);
-        /**
+        Thread.sleep(5000);
+        /**dis wal 70w tps...open wal 20w tps
          * 👉 RocksDB 默认是 低风险 + 低内存 + 低并发
          * 👉 性能潜力只用到了 30% 左右
          *
          * RocksDB 的设计是：
          * Options = DB 打开级别配置
          * WriteOptions = 每次写入时用的配置
+         *
+         * 所有写入先进入内存（MemTable），延迟、批量刷盘，减少磁盘压力
+         *
+         * WAL 写入 OS page cache（非常快）
+         *
+         * MemTable 写满才 flush
+         *
+         * flush 也被延迟
+         *
+         * compaction 也被延迟
+         *
+         * 崩溃时只丢 OS page cache 中的 WAL（通常几十毫秒）
          */
         // RocksDB 配置
-
 
 
         //  Options options2=(Options)writeOptions;
 
         Options options = new Options()
                 .setCreateIfMissing(true);
-        options   .setUseDirectReads(true);
-        options    .setUseDirectIoForFlushAndCompaction(true);
+        options.setUseDirectReads(true);
+        options.setUseDirectIoForFlushAndCompaction(true);
+
+        //设置巨大的 MemTable（写入都在内存）
         options
                 .setWriteBufferSize(256 * 1024 * 1024) // 256MB
-                .setMaxWriteBufferNumber(4)
+                .setMaxWriteBufferNumber(8)
                 .setMinWriteBufferNumberToMerge(2);
         options
                 .setIncreaseParallelism(Runtime.getRuntime().availableProcessors())
@@ -50,30 +62,33 @@ Thread.sleep(5000);
         options
                 .setParanoidChecks(false)
                 .setSkipStatsUpdateOnDbOpen(true);
-     //   options.setDisableWAL(true);
+
         options.setWalTtlSeconds(1);
         options.setCompactionStyle(CompactionStyle.UNIVERSAL);
         options
                 .setCompressionType(CompressionType.LZ4_COMPRESSION);
-        // ===== WAL =====
-        options .setWalBytesPerSync(8 * 1024 * 1024)     // 批量 fsync
+        // ===== WAL ===== 延迟 flush
+        options.setMaxTotalWalSize(200 * 1024 * 1024); // 200mb)
+        options.setDelayedWriteRate(0);  //// 不限速
+        options.setWalBytesPerSync(8 * 1024 * 1024)     // 批量 fsync
                 .setUseFsync(false);                     // 非强一致 fsync
 
+        //✔ 延迟 compaction
         options
                 .setCompactionStyle(CompactionStyle.LEVEL)
                 .setTargetFileSizeBase(256 * 1024 * 1024)
-                .setLevel0FileNumCompactionTrigger(4)
+                .setLevel0FileNumCompactionTrigger(20)
                 .setLevel0SlowdownWritesTrigger(20)
                 .setLevel0StopWritesTrigger(36);
 
 
         // 打开 RocksDB
-        try (RocksDB db = RocksDB.open(options, "rocksdb-data"+System.currentTimeMillis())) {
+        try (RocksDB db = RocksDB.open(options, "rocksdb-data" + System.currentTimeMillis())) {
 
             ObjectMapper mapper = new ObjectMapper();
             SnowflakeIdGenerator idGen = new SnowflakeIdGenerator(1, 1);
 
-            int N = 500_0000; // 写入数量
+            int N = 50_0000; // 写入数量
             long start = System.nanoTime();
             WriteOptions writeOptions = new WriteOptions()
                     .setDisableWAL(false)
@@ -94,7 +109,7 @@ Thread.sleep(5000);
                 String value = mapper.writeValueAsString(order);
 
                 // RocksDB 写入
-                db.put(writeOptions,key.getBytes(), value.getBytes());
+                db.put(writeOptions, key.getBytes(), value.getBytes());
 
                 if (i % 1000 == 0) {
                     System.out.println("写入订单 " + i + ": " + key);

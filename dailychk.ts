@@ -4,14 +4,14 @@ import sql from "mssql";
 import * as fs from "fs";
 import * as path from "path";
 import {fileURLToPath} from "node:url";
-import {dirname} from "node:path";
+import {dirname, join} from "node:path";
 
 /**
   npm install mssql
   npm install --save-dev @types/mssql
  */
 
- 
+
 
 export function getDbConfig(): sql.config {
     // 在 ES 模块里模拟 __dirname
@@ -19,7 +19,7 @@ export function getDbConfig(): sql.config {
     const __dirname = dirname(__filename);
 
     // 读取配置文件
-    const cfgPath = join(__dirname, "cfg", "db.json");
+    const cfgPath = join("/", "cfg", "db.json");
     const rawCfg = fs.readFileSync(cfgPath, "utf-8");
     const dbConfig = JSON.parse(rawCfg);
 
@@ -50,7 +50,7 @@ async function runStoredProc() {
         const result = await pool.request().execute("mntTop5");
 
         // 输出目录
-        const outputDir = path.join(__dirname, "logs_dailyChk");
+        const outputDir = path.join("/", "logs_dailyChk");
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir);
         }
