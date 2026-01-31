@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.UUID;
 import java.util.HashMap;
 import java.util.Map;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -15,8 +16,8 @@ public class SqliteWriteTest {
     public static void main(String[] args) throws Exception {
 
         // SQLite JDBC 连接
-         Connection conn = DriverManager.getConnection("jdbc:sqlite:orders6.db");
-      //  Connection conn = DriverManager.getConnection("jdbc:sqlite::memory:");
+        Connection conn = DriverManager.getConnection("jdbc:sqlite:c:/db/orders6.db");
+        //  Connection conn = DriverManager.getConnection("jdbc:sqlite::memory:");
 
         Statement stmt = conn.createStatement();
 
@@ -33,25 +34,19 @@ public class SqliteWriteTest {
         openModeFastInsert(conn);
 
 
-
-
-
-
         ObjectMapper mapper = new ObjectMapper(); // 用于 JSON 序列化
         conn.setAutoCommit(false);
         PreparedStatement ps = conn.prepareStatement("INSERT INTO ords (k, v) VALUES (?, ?)");
         SnowflakeIdGenerator idGen = new SnowflakeIdGenerator(1, 1);
 
 
-
-
         int N = 15_0000; // 写入数量
         long start = System.nanoTime();
 
 
-       for (int i = 1; i <= N; i++) {
+        for (int i = 1; i <= N; i++) {
             //开始事务
-           // conn.beginTrans();
+            // conn.beginTrans();
             // 构造订单对象
             Map<String, Object> order = new HashMap<>();
             order.put("order_id", UUID.randomUUID().toString());
@@ -70,8 +65,8 @@ public class SqliteWriteTest {
 
 
             conn.commit();
-             if(i==1)
-                 System.out.println("写入订单 " + i + ": " + k);
+            if (i == 1)
+                System.out.println("写入订单 " + i + ": " + k);
             if (i % 1000 == 0) {
                 System.out.println("写入订单 " + i + ": " + k);
             }
@@ -85,21 +80,21 @@ public class SqliteWriteTest {
         System.out.printf("写入 %d 条订单，总耗时: %.4f 秒%n", N, elapsedSec);
         System.out.printf("平均 TPS: %.2f 条/秒%n", tps);
 
-       // Statement stmt = conn.createStatement();
-      //   flush2dsk(conn,stmt, sqlCrtTab );
+        // Statement stmt = conn.createStatement();
+        //   flush2dsk(conn,stmt, sqlCrtTab );
         conn.commit();
 
-        conn.close();
+       // conn.close();
         System.out.println("完成写入");
 
 
     }
 
-    private static void flush2dsk(Connection conn, Statement stmt1, String sqlCrtTab2 ) throws SQLException {
+    private static void flush2dsk(Connection conn, Statement stmt1, String sqlCrtTab2) throws SQLException {
 
         Statement stmt = conn.createStatement();
         System.out.println("fun flsdsk()");
-        String sql="ATTACH DATABASE 'ordersFnl.db' AS diskdb;";
+        String sql = "ATTACH DATABASE 'ordersFnl.db' AS diskdb;";
         // 3. 挂载磁盘数据库
         stmt.execute(sql);
 
@@ -119,7 +114,7 @@ public class SqliteWriteTest {
         conn.commit();
 
         // 5. 定期刷盘：把内存数据写入磁盘数据库
-        String sql1="INSERT INTO diskdb.ords SELECT * FROM ords;";
+        String sql1 = "INSERT INTO diskdb.ords SELECT * FROM ords;";
         stmt.execute(sql1);
         conn.commit();
     }
@@ -137,32 +132,46 @@ public class SqliteWriteTest {
      *  synchronous=off  52tps
      *
      */
-    //// ⭐ 启用 WAL + 关闭同步（性能提升关键）
+    /// / ⭐ 启用 WAL + 关闭同步（性能提升关键）
     private static void openModeFastInsert(Connection conn) throws SQLException {
         Statement stmt = conn.createStatement();
-        stmt.execute("PRAGMA journal_mode = WAL;");
+        //wal 最快，比memory 和off都快一倍
+        stmt.execute("PRAGMA journal_mode = wal  ;");
         stmt.execute("PRAGMA synchronous = OFF;");
+
 // 设置缓存为 500MB
-stmt.execute("PRAGMA cache_size = -512000;");
-
-        stmt.execute(" PRAGMA wal_checkpoint(FULL); ");
-
-        stmt.execute(" PRAGMA wal_autocheckpoint=99999;");
+        stmt.execute("PRAGMA cache_size = -812000;");
 
 
-          stmt.execute("   PRAGMA mmap_size = 268435456;");
+
+        //wal_autocheckpoint（99999 页）。
+        stmt.execute(" PRAGMA wal_autocheckpoint=0;");
+
+
+
+        stmt.execute("   PRAGMA mmap_size = 888000111;");
 //（256MB）或更高
 
         stmt.close();
 
+        //stmt.execute(" PRAGMA wal_checkpoint=TRUNCATE;");   //  stmt.execute(" PRAGMA wal_checkpoint(FULL); ");
+
     }
 
     /**
+     *
+     * PRAGMA wal_checkpoint(FULL); 的意思是：强制执行一次 WAL checkpoint，并且保证所有 WAL 文件中的内容都被写回到主数据库文件，同时调用 fsync 确认落盘。
      *    //   stmt.execute(" PRAGMA temp_store = MEMORY;");
      * 缓存作用有限
      *
      * cache_size 和 temp_store=MEMORY 主要优化查询和临时表。
      *
      * 写入性能的瓶颈在 WAL 日志和磁盘刷盘，不在 page cache。
+     *
+     *
+     * 2. 为什么结束后消失
+     * 即使你没有手动执行 PRAGMA wal_checkpoint(...)，SQLite 在关闭数据库连接时会自动做一次 隐式 checkpoint。
+     *
+     * 如果 WAL 文件在 checkpoint 后为空，SQLite 会删除它。
      */
 }

@@ -49,7 +49,7 @@ public class RocksDBWriteTest {
 
         //设置巨大的 MemTable（写入都在内存）
         options
-                .setWriteBufferSize(256 * 1024 * 1024) // 256MB
+                .setWriteBufferSize(556 * 1024 * 1024) // 256MB
                 .setMaxWriteBufferNumber(8)
                 .setMinWriteBufferNumberToMerge(2);
         options
@@ -68,15 +68,15 @@ public class RocksDBWriteTest {
         options
                 .setCompressionType(CompressionType.LZ4_COMPRESSION);
         // ===== WAL ===== 延迟 flush
-        options.setMaxTotalWalSize(200 * 1024 * 1024); // 200mb)
+        options.setMaxTotalWalSize(600 * 1024 * 1024); // 200mb)
         options.setDelayedWriteRate(0);  //// 不限速
-        options.setWalBytesPerSync(8 * 1024 * 1024)     // 批量 fsync
+        options.setWalBytesPerSync(50 * 1024 * 1024)     // 批量 fsync
                 .setUseFsync(false);                     // 非强一致 fsync
 
         //✔ 延迟 compaction
         options
                 .setCompactionStyle(CompactionStyle.LEVEL)
-                .setTargetFileSizeBase(256 * 1024 * 1024)
+                .setTargetFileSizeBase(556 * 1024 * 1024)
                 .setLevel0FileNumCompactionTrigger(20)
                 .setLevel0SlowdownWritesTrigger(20)
                 .setLevel0StopWritesTrigger(36);

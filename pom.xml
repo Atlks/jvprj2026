@@ -36,6 +36,22 @@
             <version>9.2.1</version>
         </dependency>
 
+        <!-- Source: https://mvnrepository.com/artifact/net.openhft/chronicle-queue -->
+        <!-- Source: https://mvnrepository.com/artifact/net.openhft/chronicle-queue -->
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-queue</artifactId>
+            <version>4.16.5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.lmdbjava</groupId>
+            <artifactId>lmdbjava</artifactId>
+            <version>0.8.2</version>
+        </dependency>
+
+
 
 
         <!-- Source: https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
