@@ -1,13 +1,17 @@
 package org.example;
 
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AppendFileWriteTest {
+public class MmapAppendWriteTest {
 
     public static void main(String[] args) throws Exception {
 
@@ -18,9 +22,15 @@ public class AppendFileWriteTest {
 
         String fileName = "orders-" + System.currentTimeMillis() + ".log";
 
-        // ⭐ 1MB 缓冲区，写入速度极快
-        try (FileOutputStream fos = new FileOutputStream(fileName, true);
-             BufferedOutputStream bos = new BufferedOutputStream(fos, 1024 * 1024)) {
+        // ⭐ 预分配 1GB（可根据需要调整）
+        long mmapSize = 1L * 1024 * 1024 * 1024;
+
+        File file = new File(fileName);
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
+             FileChannel channel = raf.getChannel()) {
+
+            // ⭐ 创建 MMAP 映射
+            MappedByteBuffer mbb = channel.map(FileChannel.MapMode.READ_WRITE, 0, mmapSize);
 
             int N = 500_000;
             long start = System.nanoTime();
@@ -35,20 +45,19 @@ public class AppendFileWriteTest {
                 order.put("timestamp", System.currentTimeMillis() / 1000.0);
 
                 String json = mapper.writeValueAsString(order);
+                byte[] bytes = json.getBytes();
 
-                bos.write(json.getBytes());
-                bos.write('\n');
-
-                if (i % 2 == 0) {
-                    bos.flush();
-                }
+                // ⭐ 写入 JSON
+                mbb.put(bytes);
+                mbb.put((byte) '\n');
 
                 if (i % 1000 == 0) {
                     System.out.println("写入订单 " + i);
                 }
             }
 
-            bos.flush();
+            // ⭐ 强制刷盘（可选）
+            mbb.force();
 
             long end = System.nanoTime();
             double sec = (end - start) / 1e9;
