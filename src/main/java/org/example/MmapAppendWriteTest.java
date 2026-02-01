@@ -22,9 +22,10 @@ public class MmapAppendWriteTest {
 
         String fileName = "orders-" + System.currentTimeMillis() + ".log";
 
+        System.out.println(fileName);
         // ⭐ 预分配 1GB（可根据需要调整）
         long mmapSize = 1L * 1024 * 1024 * 1024;
-
+        mmapSize = 1L  * 1024;
         File file = new File(fileName);
         try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
              FileChannel channel = raf.getChannel()) {
