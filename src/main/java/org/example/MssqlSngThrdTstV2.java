@@ -143,7 +143,7 @@ public class MssqlSngThrdTstV2 {
         String connectionString =
                 "jdbc:sqlserver://" + cfg.server +
                         ";databaseName=" + cfg.database +
-                        ";user=sa;password=" + cfg.password +
+                        ";user=nmluser;password=" + cfg.password +
                         ";trustServerCertificate=true;";
 
         System.out.println(connectionString);
