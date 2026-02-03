@@ -7,6 +7,12 @@ import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * 30w tps..if bat 2 ..50 w tps
+ * bat10,better,,99w tps
+ *buffering  1m 10m same
+ */
 public class AppendFileWriteTest {
 
     public static void main(String[] args) throws Exception {
@@ -39,7 +45,7 @@ public class AppendFileWriteTest {
                 bos.write(json.getBytes());
                 bos.write('\n');
 
-                if (i % 2 == 0) {
+                if (i % 1 == 0) {
                     bos.flush();
                 }
 
@@ -49,6 +55,12 @@ public class AppendFileWriteTest {
             }
 
             bos.flush();
+            /*
+            ✔️ 2. FileOutputStream.write() 是直接调用 native write()
+Java 的 flush() 不会强制 fsync
+不会强制落盘
+只是把 buffer 推给 OS
+             */
 
             long end = System.nanoTime();
             double sec = (end - start) / 1e9;
