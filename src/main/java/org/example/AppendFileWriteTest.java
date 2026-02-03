@@ -45,7 +45,7 @@ public class AppendFileWriteTest {
                 bos.write(json.getBytes());
                 bos.write('\n');
 
-                if (i % 1 == 0) {
+                if (i % 2 == 0) {
                     bos.flush();
                 }
 
