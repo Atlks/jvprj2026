@@ -177,8 +177,9 @@ public class MssqlSngThrdTstV2 {
 
 
 //============= 预热连接池，一次性获取并释放所有连接
+        int warmCount = config.getMinimumIdle();
         List<Connection> connections = new ArrayList<>();
-        for (int i = 0; i < config.getMaximumPoolSize(); i++) {
+        for (int i = 0; i < warmCount; i++) {
             connections.add(ds.getConnection());
             System.out.println("get conn" + i);
         }
