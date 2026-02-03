@@ -90,6 +90,9 @@ public class MssqlSngThrdTstV2 {
                     execSql(conn, " EXEC dbo.InsertTxn;");
                     //  execSql(conn," EXEC dbo.instSameUid;") ;
                     conn.commit();
+
+                    //不要close，如果再次取出来可能问题了
+                    //本事这个try 已经自动close了
                     counter.incrementAndGet();
                     System.out.println("finish::" + counter.get());
 
@@ -148,12 +151,29 @@ public class MssqlSngThrdTstV2 {
         config.setPassword(cfg.password);
         int maxPoolSize = getCpuCores() * 5;
 
+//禁用 SQL Server JDBC metadata 查询（大幅加速）  连接速度会快 30%–70%。
+        //去加密 加速效果：巨大（30%–60%）
+        config.addDataSourceProperty("disableStatementPooling", "true");
+        config.addDataSourceProperty("sendTimeAsDatetime", "true");
+        config.addDataSourceProperty("sendStringParametersAsUnicode", "false");
+  config.addDataSourceProperty("authenticationScheme", "nativeAuthentication");
+        config.addDataSourceProperty("encrypt", "false"); // 内网可关
+        config.addDataSourceProperty("encrypt", "false");
+        config.addDataSourceProperty("trustServerCertificate", "true");
+        config.addDataSourceProperty("transparentNetworkIPResolution", "false");
+       //⭐ 6. 禁用 MultiSubnetFailover（如果你没有 AG）
+        config.addDataSourceProperty("multiSubnetFailover", "false");
+        config.addDataSourceProperty("columnEncryptionSetting", "Disabled");
+        config.addDataSourceProperty("loginTimeout", "5");
+
+
+
         //  虚拟现成安全地开更多连接而不受本地 CPU 核心数限制。
-        config.setMaximumPoolSize(300);
-        config.setMinimumIdle(300);
+        config.setMaximumPoolSize(200);
+        config.setMinimumIdle(200);
         config.setKeepaliveTime(60_000); // 1分钟发一次保活
         config.setMaxLifetime(30 * 60_000); // 连接最长存活时间（ms），避免数据库自动关闭老连接
-        //  config.setConnectionTimeout(30_000); // 获取连接超时（ms）
+          config.setConnectionTimeout(3000_000); // 获取连接超时（ms）
         //  config.setInitializationFailTimeout(-1); // 启动就检查连接失败
         // 确保启动时立即初始化所有连接
         config.setInitializationFailTimeout(-1); // 启动时如果连接失败抛异常
