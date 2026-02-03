@@ -41,16 +41,28 @@ public class Util {
     }
 
 
+    /**
+     * 获取本机 CPU 核心数（逻辑核心数）
+     * @return CPU 核心数
+     */
+    public static int getCpuCores() {
+        return Runtime.getRuntime().availableProcessors();
+    }
+
+    static void main() {
+        System.out.println( getCpuCores());
+    }
 
 
     /**
      * 12 cpu..50 线程数可以了，多了没用
+     * 本地的cpu5倍数
      * @return
      */
     public static ExecutorService getExecutorService() {
-        int threadsSuggst50 = 50;
+        int threadsSuggst50 = getCpuCores()*5;
 
-        ExecutorService pool = Executors.newFixedThreadPool(threadsSuggst50);
+        ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor( );
         return pool;
     }
 }
