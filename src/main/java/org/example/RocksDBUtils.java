@@ -95,7 +95,7 @@ public class RocksDBUtils {
      * @return 范围内的 key/value 列表
      */
     public static List<Map.Entry<String, String>> rangeQuery(String dbPath, String startKey, String order, int limit) throws RocksDBException {
-        List<Map.Entry<String, String>> result = new ArrayList<>();
+
         Options options = new Options().setCreateIfMissing(false);
 
         try (RocksDB db = RocksDB.open(options, dbPath);
@@ -110,66 +110,75 @@ public class RocksDBUtils {
             }
 
             if (order.equalsIgnoreCase("asc")) {
-
-
-                if( startKey=="@last")
-                {
-                    return result;
-                    // 定位到第一个 key
-                   // iterator.seekToFirst();
-                } else if( startKey=="@first")
-                {
-
-                     iterator.seekToFirst();
-                }
-
-                else{
-                    // 正序遍历
-                    iterator.seek(startKey.getBytes());
-                }
-                int count = 0;
-                while (iterator.isValid() && count < limit) {
-                    String key = new String(iterator.key());
-                    String value = new String(iterator.value());
-                    result.add(new AbstractMap.SimpleEntry<>(key, value));
-                    iterator.next();
-                    count++;
-                }
+                return qryRangAsc(startKey, limit,  iterator);
             } else {
-                if( startKey=="@last")
-                {
-                    // 定位到最后一个 key
-                    iterator.seekToLast();
-                } else if( startKey=="@first")
-                {
-
-                   return  result;
-                }
-
-                else{
-                    // 倒序遍历
-                    iterator.seek(startKey.getBytes());
-                }
-
-
-
-                // 如果 startKey 不存在，先定位到小于 startKey 的最大 key
-                if (!iterator.isValid() || !new String(iterator.key()).equals(startKey)) {
-                    iterator.seekForPrev(startKey.getBytes());
-                }
-
-                int count = 0;
-                while (iterator.isValid() && count < limit) {
-                    String key = new String(iterator.key());
-                    String value = new String(iterator.value());
-                    result.add(new AbstractMap.SimpleEntry<>(key, value));
-                    iterator.prev();
-                    count++;
-                }
+                return qryRangDesc(startKey, limit, iterator);
             }
+
         }
 
-        // 倒序不需要反转，因为 iterator.prev() 已经是倒序
+    }
+
+    private static List<Map.Entry<String, String>> qryRangDesc(String startKey, int limit, RocksIterator iterator ) {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
+
+        if( startKey =="@last")
+        {
+            // 定位到最后一个 key
+            iterator.seekToLast();
+        } else if( startKey =="@first")
+        {
+
+            return result;
+        }
+
+        else{
+            // 倒序遍历
+            iterator.seek(startKey.getBytes());
+        }
+
+
+        // 如果 startKey 不存在，先定位到小于 startKey 的最大 key
+        if (!iterator.isValid() || !new String(iterator.key()).equals(startKey)) {
+            iterator.seekForPrev(startKey.getBytes());
+        }
+
+        int count = 0;
+        while (iterator.isValid() && count < limit) {
+            String key = new String(iterator.key());
+            String value = new String(iterator.value());
+            result.add(new AbstractMap.SimpleEntry<>(key, value));
+            iterator.prev();
+            count++;
+        }
+        return result;
+    }
+
+    private static List<Map.Entry<String, String>> qryRangAsc(String startKey, int limit,   RocksIterator iterator) {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
+        if( startKey =="@last")
+        {
+            return result;
+            // 定位到第一个 key
+           // iterator.seekToFirst();
+        } else if( startKey =="@first")
+        {
+
+             iterator.seekToFirst();
+        }
+
+        else{
+            // 正序遍历
+            iterator.seek(startKey.getBytes());
+        }
+        int count = 0;
+        while (iterator.isValid() && count < limit) {
+            String key = new String(iterator.key());
+            String value = new String(iterator.value());
+            result.add(new AbstractMap.SimpleEntry<>(key, value));
+            iterator.next();
+            count++;
+        }
         return result;
     }
 
