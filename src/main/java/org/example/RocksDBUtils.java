@@ -32,81 +32,6 @@ public class RocksDBUtils {
 
     }
 
-    /**
-     * 列出 RocksDB 最后 N 个 key 和 value
-     */
-    public static List<Map.Entry<String, String>> listLastKeys(String dbPath, int n) throws RocksDBException {
-        List<Map.Entry<String, String>> result = new ArrayList<>();
-        Options options = new Options().setCreateIfMissing(false);
-
-        try (RocksDB db = RocksDB.open(options, dbPath);
-             RocksIterator iterator = db.newIterator()) {
-
-            // 定位到最后一个 key
-            iterator.seekToLast();
-
-            int count = 0;
-            while (iterator.isValid() && count < n) {
-                String key = new String(iterator.key());
-                String value = new String(iterator.value());
-                result.add(new AbstractMap.SimpleEntry<>(key, value));
-
-                iterator.prev(); // 反向遍历
-                count++;
-            }
-        }
-
-        // 反转顺序，使结果从最旧到最新（可选）
-      //  Collections.reverse(result);
-
-        return result;
-    }
-
-
-    /**
-     *
-     * @param dbPath
-     * @param nextKey
-     * @param n
-     * @return
-     * @throws RocksDBException
-     */
-    @Deprecated
-    public static List<Map.Entry<String, String>> listLastKeys(String dbPath, String nextKey, int n) throws RocksDBException {
-        List<Map.Entry<String, String>> result = new ArrayList<>();
-        Options options = new Options().setCreateIfMissing(false);
-
-        try (RocksDB db = RocksDB.open(options, dbPath);
-             RocksIterator iterator = db.newIterator()) {
-
-            // 定位到最后一个 key
-            iterator.seekToLast();
-
-            int count = 0;
-            while (iterator.isValid() && count < n) {
-                String key = new String(iterator.key());
-                String value = new String(iterator.value());
-
-
-                // 判断 key 是否小于 nextKey
-                if (key.compareTo(nextKey) <= 0)
-                {
-                    result.add(new AbstractMap.SimpleEntry<>(key, value));
-
-                    count++;
-                }
-
-
-                  iterator.prev(); // 反向遍历
-
-            }
-        }
-
-        // 反转顺序，使结果从最旧到最新（可选）
-        //  Collections.reverse(result);
-
-        return result;
-    }
 
 
     /**
@@ -142,6 +67,14 @@ public class RocksDBUtils {
 
     }
 
+    /**
+     * 数据查询 范围查询 算法 ，游标查询算法
+     * 查询dv数据库
+     * @param startKey
+     * @param limit
+     * @param iterator
+     * @return
+     */
     private static List<Map.Entry<String, String>> qryRangDesc(String startKey, int limit, RocksIterator iterator ) {
         List<Map.Entry<String, String>> result = new ArrayList<>();
 
@@ -205,5 +138,83 @@ public class RocksDBUtils {
         return result;
     }
 
+
+
+
+    /**
+     * 列出 RocksDB 最后 N 个 key 和 value
+     */
+    public static List<Map.Entry<String, String>> listLastKeys(String dbPath, int n) throws RocksDBException {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
+        Options options = new Options().setCreateIfMissing(false);
+
+        try (RocksDB db = RocksDB.open(options, dbPath);
+             RocksIterator iterator = db.newIterator()) {
+
+            // 定位到最后一个 key
+            iterator.seekToLast();
+
+            int count = 0;
+            while (iterator.isValid() && count < n) {
+                String key = new String(iterator.key());
+                String value = new String(iterator.value());
+                result.add(new AbstractMap.SimpleEntry<>(key, value));
+
+                iterator.prev(); // 反向遍历
+                count++;
+            }
+        }
+
+        // 反转顺序，使结果从最旧到最新（可选）
+        //  Collections.reverse(result);
+
+        return result;
+    }
+
+
+    /**
+     *
+     * @param dbPath
+     * @param nextKey
+     * @param n
+     * @return
+     * @throws RocksDBException
+     */
+    @Deprecated
+    public static List<Map.Entry<String, String>> listLastKeys(String dbPath, String nextKey, int n) throws RocksDBException {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
+        Options options = new Options().setCreateIfMissing(false);
+
+        try (RocksDB db = RocksDB.open(options, dbPath);
+             RocksIterator iterator = db.newIterator()) {
+
+            // 定位到最后一个 key
+            iterator.seekToLast();
+
+            int count = 0;
+            while (iterator.isValid() && count < n) {
+                String key = new String(iterator.key());
+                String value = new String(iterator.value());
+
+
+                // 判断 key 是否小于 nextKey
+                if (key.compareTo(nextKey) <= 0)
+                {
+                    result.add(new AbstractMap.SimpleEntry<>(key, value));
+
+                    count++;
+                }
+
+
+                iterator.prev(); // 反向遍历
+
+            }
+        }
+
+        // 反转顺序，使结果从最旧到最新（可选）
+        //  Collections.reverse(result);
+
+        return result;
+    }
 
 }
