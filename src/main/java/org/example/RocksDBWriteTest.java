@@ -1,12 +1,12 @@
 package org.example;
 
 
+import com_uti.SnowflakeIdGenerator;
 import org.rocksdb.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class RocksDBWriteTest {
 

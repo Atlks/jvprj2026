@@ -4,6 +4,7 @@ package org.example;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com_uti.SnowflakeIdGenerator;
 
 import java.io.File;
 import java.util.ArrayList;
