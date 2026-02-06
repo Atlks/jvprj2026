@@ -9,6 +9,29 @@ public class RocksDBUtils {
         RocksDB.loadLibrary();
     }
 
+    public static void main(String[] args) throws RocksDBException {
+        String dbPath = "C:\\Users\\attil\\IdeaProjects\\jvprj2026\\rocksdb-data1770366064462"; // 替换为你的 RocksDB 数据目录
+        ;
+        String startKey = "2019687788127064230";
+
+        // 测试倒序，默认返回 10 条
+        List<Map.Entry<String, String>> lastKeys = rangeQuery(dbPath, startKey, "desc", 10);
+        System.out.println("=== Desc ===");
+        for (Map.Entry<String, String> entry : lastKeys) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
+        }
+
+        System.out.println(" dsc finsh...");
+
+        // 测试正序
+        List<Map.Entry<String, String>> ascKeys = rangeQuery(dbPath, startKey, "asc", 10);
+        System.out.println("=== Asc ===");
+        for (Map.Entry<String, String> entry : ascKeys) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
+        }
+
+    }
+
     /**
      * 列出 RocksDB 最后 N 个 key 和 value
      */
@@ -182,26 +205,5 @@ public class RocksDBUtils {
         return result;
     }
 
-    public static void main(String[] args) throws RocksDBException {
-        String dbPath = "C:\\Users\\attil\\IdeaProjects\\jvprj2026\\rocksdb-data1770366064462"; // 替换为你的 RocksDB 数据目录
-       ;
-        String startKey = "@first";
 
-        // 测试倒序，默认返回 10 条
-        List<Map.Entry<String, String>> lastKeys = rangeQuery(dbPath, startKey, "desc", 10);
-        System.out.println("=== Desc ===");
-        for (Map.Entry<String, String> entry : lastKeys) {
-            System.out.println(entry.getKey() + " -> " + entry.getValue());
-        }
-
-        System.out.println(" dsc finsh...");
-
-        // 测试正序
-        List<Map.Entry<String, String>> ascKeys = rangeQuery(dbPath, startKey, "asc", 10);
-        System.out.println("=== Asc ===");
-        for (Map.Entry<String, String> entry : ascKeys) {
-            System.out.println(entry.getKey() + " -> " + entry.getValue());
-        }
-
-    }
 }
