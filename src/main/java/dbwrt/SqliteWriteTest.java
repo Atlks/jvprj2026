@@ -1,4 +1,4 @@
-package org.example;
+package dbwrt;
 
 import java.sql.*;
 import java.util.UUID;
@@ -17,7 +17,7 @@ public class SqliteWriteTest {
     public static void main(String[] args) throws Exception {
 
         // SQLite JDBC 连接
-        Connection conn = DriverManager.getConnection("jdbc:sqlite:c:/db/orders6.db");
+        Connection conn = DriverManager.getConnection("jdbc:sqlite:c:/db/orders65.db");
         //  Connection conn = DriverManager.getConnection("jdbc:sqlite::memory:");
 
         Statement stmt = conn.createStatement();
@@ -65,9 +65,9 @@ public class SqliteWriteTest {
             ps.executeUpdate();
 
 
-            conn.commit();
-            if (i == 1)
-                System.out.println("写入订单 " + i + ": " + k);
+
+            if (i % 1==0)
+                conn.commit();
             if (i % 1000 == 0) {
                 System.out.println("写入订单 " + i + ": " + k);
             }
@@ -137,25 +137,40 @@ public class SqliteWriteTest {
     private static void openModeFastInsert(Connection conn) throws SQLException {
         Statement stmt = conn.createStatement();
         //wal 最快，比memory 和off都快一倍
+        // jrnal mod=off 就是wal，直接写dat fil，所以不是顺序写，所以更慢
         stmt.execute("PRAGMA journal_mode = wal  ;");
-        stmt.execute("PRAGMA synchronous = OFF;");
+        stmt.execute("PRAGMA synchronous = normal;");
+        //wal_autocheckpoint（99999 页）。
+        //默认 SQLite 每 1000 页自动 checkpoint（大约 1MB/页看设置）
+      //  stmt.execute(" PRAGMA wal_autocheckpoint=999999;");
+        //完全手动提交ckpnt
+        stmt.execute(" PRAGMA wal_checkpoint=TRUNCATE;");
+
 
 // 设置缓存为 500MB
         stmt.execute("PRAGMA cache_size = -812000;");
+//（888M）或更高 8gb
 
 
-
-        //wal_autocheckpoint（99999 页）。
-        stmt.execute(" PRAGMA wal_autocheckpoint=0;");
-
-
-
-        stmt.execute("   PRAGMA mmap_size = 888000111;");
-//（256MB）或更高
+        /**
+         * 这些mmapsize参数只影响：
+         *
+         * 读
+         *
+         * 范围扫描
+         *
+         * page fault
+         *
+         * 对 commit TPS 几乎无影响
+         */
+        long mmapsize=2*1024*1024*1024;
+        stmt.execute("   PRAGMA mmap_size = "+String.valueOf(mmapsize)+";" );
+               ;
+        stmt.execute(" PRAGMA temp_store = MEMORY; ");
 
         stmt.close();
 
-        //stmt.execute(" PRAGMA wal_checkpoint=TRUNCATE;");   //  stmt.execute(" PRAGMA wal_checkpoint(FULL); ");
+       //  stmt.execute(" PRAGMA wal_checkpoint(FULL); ");
 
     }
 

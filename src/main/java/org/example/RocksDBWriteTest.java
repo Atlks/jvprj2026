@@ -92,7 +92,7 @@ public class RocksDBWriteTest {
              * 性能评价，默认 20wtps
              * DisableWAL(true) 写入100wtps
              */
-            int N = 50_0000; // 写入数量
+            int N = 5_0000; // 写入数量
             long start = System.nanoTime();
             WriteOptions writeOptions = new WriteOptions()
                     .setDisableWAL(true)

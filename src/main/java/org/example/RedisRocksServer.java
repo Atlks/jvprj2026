@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class RedisRocksServer {
 
     private static RocksDB getDb() throws RocksDBException {
         Options options = new Options().setCreateIfMissing(false);
-        String dbPath = "C:\\Users\\attil\\IdeaProjects\\jvprj2026\\datax\\rocksdb-data1770438307632"; // 替换为你的 RocksDB 数据目录
+        String dbPath = "C:\\Users\\attil\\IdeaProjects\\jvprj2026\\datax\\rocksdb-data1770445278593"; // 替换为你的 RocksDB 数据目录
 
         RocksDB db = RocksDB.open(options, dbPath);
         return db;
@@ -88,6 +89,13 @@ public class RedisRocksServer {
                 System.out.println("cmd:" + cmdName);
                 switch (cmdName) {
 
+                    case "PEXPIRETIME":
+                        handlePEXPIRETIME(out, commands);
+                        break;
+                    case "MEMORY":
+                        handleMemoryUsage(out, commands);
+                        break;
+
                     case "TYPE":
                         handleType(out, commands);
                         break;
@@ -121,7 +129,95 @@ public class RedisRocksServer {
 
     }
 
+    private static void handlePEXPIRETIME(OutputStream out, List<byte[]> commands) throws IOException {
+        // PEXPIRETIME key
+        if (commands.size() != 2) {
+            writeError(out, "ERR wrong number of arguments for 'pexpiretime' command");
+            return;
+        }
 
+        String key = new String(commands.get(1), StandardCharsets.UTF_8);
+
+        // ① 判断 key 是否存在
+        if (!exists(key)) {
+            writeInteger(out, -2);
+            return;
+        }
+
+        // ② 取绝对过期时间（毫秒）
+        // 约定：不存在过期返回 -1
+        long expireAt = getExpireAtMillis(key);
+
+        if (expireAt <= 0) {
+            writeInteger(out, -1);
+        } else {
+            writeInteger(out, expireAt);
+        }
+    }
+
+
+    // 判断rocksdb 是否存在key
+    private static boolean exists(String key) {
+        try {
+            byte[] value = db.get(key.getBytes(StandardCharsets.UTF_8));
+            return value != null;
+        } catch (RocksDBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    private static byte[] longToBytes(long value) {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(value);
+        return buffer.array();
+    }
+
+
+    private static long bytesToLong(byte[] bytes) {
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        return buffer.getLong();
+    }
+
+
+    private static long getExpireAtMillis(String key) {
+        // 返回：
+        // >0 : expireAtMillis
+        // <=0: 没有过期
+       return  -1;
+    }
+
+    private static void writeError(OutputStream out, String msg) throws IOException {
+        out.write('-');
+        out.write(msg.getBytes(StandardCharsets.UTF_8));
+        out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static void writeInteger(OutputStream out, long value) throws IOException {
+        out.write(':');
+        out.write(Long.toString(value).getBytes(StandardCharsets.UTF_8));
+        out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+    }
+
+
+    private static void handleMemoryUsage(OutputStream out, List<byte[]> args) throws IOException {
+        if (args.size() < 3) { // MEMORY USAGE <key>
+            out.write("-ERR wrong number of arguments\r\n".getBytes());
+            return;
+        }
+        byte[] key = args.get(2); // 注意：args[0]="MEMORY", args[1]="USAGE", args[2]=key
+        try {
+            byte[] value = db.get(key);
+            if (value == null) {
+                out.write("$-1\r\n".getBytes()); // 或者返回 :0\r\n
+            } else {
+                // 返回字节数
+                out.write((":" + value.length + "\r\n").getBytes());
+            }
+        } catch (RocksDBException e) {
+            out.write("-ERR rocksdb error\r\n".getBytes());
+        }
+    }
     private static void handleType(OutputStream out, List<byte[]> args) throws IOException {
         byte[] key = args.get(1);
         try {
