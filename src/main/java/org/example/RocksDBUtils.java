@@ -10,9 +10,9 @@ public class RocksDBUtils {
     }
 
     public static void main(String[] args) throws RocksDBException {
-        String dbPath = "C:\\Users\\attil\\IdeaProjects\\jvprj2026\\rocksdb-data1770366064462"; // 替换为你的 RocksDB 数据目录
+        String dbPath = "C:\\Users\\attil\\IdeaProjects\\jvprj2026\\datax\\rocksdb-data1770438307632"; // 替换为你的 RocksDB 数据目录
         ;
-        String startKey = "2019687788127064230";
+        String startKey = "@last";
 
         // 测试倒序，默认返回 10 条
         List<Map.Entry<String, String>> lastKeys = rangeQuery(dbPath, startKey, "desc", 10);

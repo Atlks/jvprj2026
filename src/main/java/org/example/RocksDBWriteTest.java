@@ -83,7 +83,7 @@ public class RocksDBWriteTest {
 
 
         // 打开 RocksDB
-        try (RocksDB db = RocksDB.open(options, "rocksdb-data" + System.currentTimeMillis())) {
+        try (RocksDB db = RocksDB.open(options, "datax/rocksdb-data" + System.currentTimeMillis())) {
 
             ObjectMapper mapper = new ObjectMapper();
             SnowflakeIdGenerator idGen = new SnowflakeIdGenerator(1, 1);
@@ -95,7 +95,7 @@ public class RocksDBWriteTest {
             int N = 50_0000; // 写入数量
             long start = System.nanoTime();
             WriteOptions writeOptions = new WriteOptions()
-                  //  .setDisableWAL(true)
+                    .setDisableWAL(true)
                     .setSync(false);
 
 
