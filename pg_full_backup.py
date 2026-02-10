@@ -3,7 +3,8 @@ import os
 import subprocess
 import sys
 from datetime import datetime
-
+from typing import Any
+import json
 # ============================================
 # PostgreSQL 全量备份（Python版）
 # - 不新建 PG 用户
@@ -30,6 +31,23 @@ def log(msg: str):
     with open(LOG_FILE, "a") as f:
         f.write(f"[{TIME}] {msg}\n")
 
+
+def encodeJson(obj: Any) -> str:
+    """
+    将任意对象编码为 JSON 字符串。
+
+    Args:
+        obj (Any): 要编码的对象（支持 dict、list、str、int、float 等）
+
+    Returns:
+        str: JSON 格式字符串
+    """
+    try:
+        return json.dumps(obj, ensure_ascii=False)
+    except (TypeError, ValueError) as e:
+        raise ValueError(f"对象无法编码为 JSON: {e}")
+
+
 def main():
     log(f"START backup {DB_NAME}")
 
@@ -40,7 +58,7 @@ def main():
         "sudo", "-u", "postgres",
         PG_BIN, "-Fc", DB_NAME
     ]
-
+    log(encodeJson(cmd))
     try:
         with open(BACKUP_FILE, "wb") as out:
             result = subprocess.run(
@@ -70,6 +88,7 @@ def main():
     log("-" * 50)
 
 print(f"666")
+log(777)
 
 
 if __name__ == "__main__":
