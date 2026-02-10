@@ -10,7 +10,7 @@ from datetime import datetime
 # - 使用 postgres 系统用户
 # - 每日全量 pg_dump
 # - 自动清理旧备份
-# 0 2 * * * python3 /bkbin/pg_full_backup.py
+# 0 2 * * * python3 /scrpt/pg_full_backup.py
 
 # ============================================
 
