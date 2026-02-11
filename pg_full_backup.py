@@ -5,6 +5,8 @@ import sys
 from datetime import datetime
 from typing import Any
 import json
+# staic chk  mypy pg_full_backup.py
+# ver 211
 # ============================================
 # PostgreSQL 全量备份（Python版）
 # - 不新建 PG 用户
@@ -23,9 +25,10 @@ PG_BIN = "/usr/bin/pg_dump"
 LOG_FILE = "/backup/pg_backup.log"
 
 DATE = datetime.now().strftime("%Y-%m-%d")
-TIME = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-BACKUP_FILE = f"{BACKUP_DIR}/{DB_NAME}_{DATE}.dump"
-
+TIME = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+dtTIME = datetime.now().strftime("%Y-%m-%dT%H_%M_%S")
+BACKUP_FILE = f"{BACKUP_DIR}/{DB_NAME}_fullbk_{dtTIME}.dump"
+print("bkfl:"+BACKUP_FILE)
 def log(msg: str):
     print(msg)
     with open(LOG_FILE, "a") as f:
@@ -59,6 +62,8 @@ def main():
         PG_BIN, "-Fc", DB_NAME
     ]
     log(encodeJson(cmd))
+
+    log("")
     try:
         with open(BACKUP_FILE, "wb") as out:
             result = subprocess.run(
