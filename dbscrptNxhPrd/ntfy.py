@@ -2,6 +2,7 @@ import os
 import requests
 from datetime import datetime
 import os
+# C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Scripts\pip3.exe install requests
 # ===== 配置 =====
 
 
@@ -27,7 +28,7 @@ def readFile(file_path):
 def curDate():
     return datetime.now().strftime("%Y%m%d")
 
-BOT_TOKEN = readFile("/cfg/bot_cfg.ini")  # 例如 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ
+BOT_TOKEN = readFile("d:/scrpt/bot_cfg.ini")  # 例如 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ
 CHAT_ID = "-1003854160906"           # 你的个人或群组ID
 
 curDate=curDate()
@@ -39,9 +40,9 @@ def chkNntfy():
     # ===== 检查文件 =====
     msg=f"\n路径: {BACKUP_FILE}\nprj:{prj}\nip:137.220.155.117"
     if os.path.exists(BACKUP_FILE):
-        message = f"文件备份成功 ✅"+msg
+        message = f"db灾备备份成功 ✅"+msg
     else:
-        message = f"备份文件不存在 ❌"+msg
+        message = f"db灾备备份文件不存在 ❌"+msg
 
     # ===== 发送 Telegram 消息 =====
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -64,5 +65,5 @@ import time
 while True:
 
     chkNntfy()
-    time.sleep(5)
+    time.sleep(3600*12)
 
